@@ -175,3 +175,60 @@ class BookDetailGenericMixinView(UpdateModelMixin, RetrieveModelMixin, GenericAP
 #     serializer_class = BookInfoModelSerializer
 #     # 指定查询集'数据来源'
 #     queryset = BookInfo.objects.all()
+
+"""以下是APIView的视图集"""
+
+
+class BookViewSet(ViewSet):
+    """视图集"""
+
+    def list(self, request):
+        qs = BookInfo.objects.all()
+        serializer = BookInfoModelSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk):
+        try:
+            book = BookInfo.objects.get(id=pk)
+        except BookInfo.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = BookInfoModelSerializer(book)
+        return Response(serializer.data)
+
+"""以下是GenericAPIView的视图集"""
+# class BookViewSet(GenericViewSet):
+# class BookViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
+# class BookViewSet(ReadOnlyModelViewSet):
+class BookModelViewSet(ModelViewSet):
+    """视图集"""
+    queryset = BookInfo.objects.all()
+    serializer_class = BookInfoModelSerializer
+
+    # def list(self, request):
+    #     qs = self.get_queryset()
+    #     serializer = self.get_serializer(qs, many=True)
+    #     return Response(serializer.data)
+
+    # 查询最后一本书  books/latest/  get:latest
+    @action(methods=['get'], detail=False)
+    # @action(methods=[指定下面的行为接收什么请求], detail=是不是详情视图如果是不详情视图就是 books/latest)
+    def latest(self, request):
+        """
+        返回最新的图书信息
+        """
+        book = BookInfo.objects.latest('id')  # 获取最后一本书
+        serializer = self.get_serializer(book)
+        return Response(serializer.data)
+
+    # books/pk/read/
+    @action(methods=['put'], detail=True)
+    def read(self, request, pk):
+        """
+        修改图书的阅读量数据
+        """
+        book = self.get_object()
+        book.bread = request.data.get('bread')
+        book.save()
+        serializer = self.get_serializer(book)
+        return Response(serializer.data)
