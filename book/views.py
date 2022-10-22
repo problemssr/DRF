@@ -68,11 +68,11 @@ class BookDetailAPIView(APIView):
 
     def put(self, request, pk):
         # 查询pk所指定的模型对象
+        # 获取前端传入的请求体数据
         try:
             book = BookInfo.objects.get(id=pk)
         except BookInfo.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        # 获取前端传入的请求体数据
         # 创建序列化器进行反序列化
         serializer = BookInfoModelSerializer(instance=book, data=request.data)
         # 校验
@@ -91,3 +91,39 @@ class BookDetailAPIView(APIView):
 
         book.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+"""以下是继承GenericAPIView的视图"""
+
+
+class BookListGenericView(GenericAPIView):
+    """列表视图"""
+    # 指定序列化器类
+    serializer_class = BookInfoModelSerializer
+    # 指定查询集'数据来源'
+    queryset = BookInfo.objects.all()
+
+    def get(self, request):
+        qs = self.get_queryset()
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+
+class BookDetailGenericView(GenericAPIView):
+    """详情视图"""
+    # 指定序列化器类
+    serializer_class = BookInfoModelSerializer
+    # 指定查询集'数据来源'
+    queryset = BookInfo.objects.all()
+
+    def get(self, request, pk):
+        book = self.get_object()  # queryset.get(self.kwargs)
+        serializer = self.get_serializer(book)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        book = self.get_object()
+        serializer = self.get_serializer(book, request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
