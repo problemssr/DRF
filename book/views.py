@@ -127,3 +127,51 @@ class BookDetailGenericView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+"""以下是GenericAPIView和mixin的混合使用视图"""
+
+
+class BookListGenericMixinView(CreateModelMixin, ListModelMixin, GenericAPIView):
+    """列表视图"""
+    # 指定序列化器类
+    serializer_class = BookInfoModelSerializer
+    # 指定查询集'数据来源'
+    queryset = BookInfo.objects.all()
+
+    def get(self, request):
+        return self.list(request)
+
+    def post(self, request):
+        return self.create(request)
+
+
+class BookDetailGenericMixinView(UpdateModelMixin, RetrieveModelMixin, GenericAPIView):
+    """详情视图"""
+    # 指定序列化器类
+    serializer_class = BookInfoModelSerializer
+    # 指定查询集'数据来源'
+    queryset = BookInfo.objects.all()
+
+    def get(self, request, pk):
+        return self.retrieve(request, pk)
+
+    def put(self, request, pk):
+        return self.update(request, pk)
+
+
+"""以下是GenericAPIView和Mixin合成的子类视图"""
+# class BookListGenericView(ListCreateAPIView):
+#     """列表视图"""
+#     # 指定序列化器类
+#     serializer_class = BookInfoModelSerializer
+#     # 指定查询集'数据来源'
+#     queryset = BookInfo.objects.all()
+#
+#
+# class BookDetailGenericView(RetrieveUpdateDestroyAPIView):
+#     """详情视图"""
+#     # 指定序列化器类
+#     serializer_class = BookInfoModelSerializer
+#     # 指定查询集'数据来源'
+#     queryset = BookInfo.objects.all()
